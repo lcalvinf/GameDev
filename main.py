@@ -32,6 +32,8 @@ def reset(level):
             if row[x_idx] in LAYOUT_KEY.keys():
                 item = LAYOUT_KEY[row[x_idx]]
                 if item["merge"]:
+                    # Merge adjacent bricks so they're single entities
+                    # This prevents weird skipping along the floor and walls
                     if row[x_idx] in row_ents and row_ents[row[x_idx]][-1].rect.right == x and row_ents[row[x_idx]][-1].rect.height == BRICK_H:
                         row_ents[row[x_idx]][-1].rect.width += BRICK_W
                     elif row[x_idx] in column and column[row[x_idx]][-1].rect.bottom == y and column[row[x_idx]][-1].rect.width == BRICK_W:
@@ -44,6 +46,8 @@ def reset(level):
                         e = item["type"]([x, y], screen)
                         column[row[x_idx]].append(e)
                         row_ents[row[x_idx]].append(e)
+                        # Merging items are added to the beginning so they're always rendered and updated before everything else
+                        # This probably doesn't really matter anymore but I'm keeping it just in case
                         world.insert(0, e)
                 else:
                     world.append(item["type"]([x,y], screen))

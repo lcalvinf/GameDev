@@ -1,5 +1,4 @@
 import pygame as pg
-import random
 import math
 from settings import *
 
@@ -12,6 +11,7 @@ class Entity:
     def __init__(self, pos, size, sprite, display):
         self.remove = False
         self.rect = pg.Rect(*pos, *size)
+        # Mass currently doesn't really matter but the idea was that collisions would distribute energy according to the ratio of the masses
         self.mass = math.log(size[0]*size[1]/100)+1
         self.vel = [0.0,0.0]
         self.acc = [0.0,0.0]
@@ -24,6 +24,7 @@ class Entity:
     def set_sprite(self, sprite):
         self.sprite = pg.transform.scale(sprite, self.rect.size)
 
+    # each class should override handle_collision with its particular collision logic
     def handle_collision(self, item, collision_data):
         pass
 
@@ -31,6 +32,7 @@ class Entity:
         self.collided = []
         new_on_ground = False
         for item in world:
+            # Never collide twice with the same item in the same frame
             if item is self or item in self.collided or self in item.collided:
                 continue
             should_bounce = type(item).bounces
@@ -38,6 +40,11 @@ class Entity:
             if intersection.width == 0 or intersection.height == 0:
                 continue
             
+            # collision_data format:
+            # intersection: pg.Rect representing the overlap of the two entity's Rects
+            # should_bounce: Boolean for whether one entity should bounce off the other, or just stop colliding
+            # direction: "left" | "right" | "top" | "bottom" | "both"; direction of collision (eg. "left" means the left side of the other entity is hitting the right side of this entity)
+            # axis: "x" | "y" | "both"; which axis the collision is on; "both" means a corner collision
             collision_data = {
                 "intersection": intersection,
                 "should_bounce": should_bounce,
@@ -82,6 +89,8 @@ class Entity:
                     "bottom": "top",
                     "both": "both"
                 }
+                # on collision, have the other entity handle a collision with us
+                # that way we know both entities handle the collision exactly once
                 item.handle_collision(self, {
                     "intersection": collision_data["intersection"],
                     "axis": collision_data["axis"],
@@ -90,6 +99,9 @@ class Entity:
                 })
         self.on_ground = new_on_ground
     def add_gravity(self):
+        # the player has a different gravity when jumping than when falling
+        # it helps make the jump feel better
+        # this should probably be in the Player class instead but whatever
         if self.vel[1] < 0:
             self.acc[1] += GRAVITY_JUMPING*self.mass
         else:
@@ -98,6 +110,7 @@ class Entity:
     def update(self, world):
         self.add_gravity()
         self.vel = add_vectors(self.vel, mul_vectors(self.acc, 1/self.mass))
+        # No-one's going to accelerate past the TERMINAL_VEL in the x direction right
         if self.vel[1] > TERMINAL_VEL:
             self.vel[1] = TERMINAL_VEL
         self.rect.x += self.vel[0]
@@ -105,6 +118,7 @@ class Entity:
         self.handle_collisions(world)
         self.acc = [0,0]
     
+    # Since we merge adjacent bricks, we have to do fancy things to the sprite to make it look right
     def resize_sprite(self):
         sprite_rect = self.sprite.get_rect()
         if self.rect.width > sprite_rect.width:
@@ -184,6 +198,8 @@ class Player(Entity):
         if keys[pg.K_RIGHT]:
             self.acc[0] += self.speed*self.mass 
         if keys[pg.K_SPACE]:
+            # we implement long jumping by continue to apply a slight upward acceleration for a bit
+            # if the user continues pressing space after jumping
             if not self.jumping and self.last_on_ground < COYOTE:
                 self.jumping = True
                 self.acc[1] = -JUMP_STRENGTH*self.mass
@@ -207,6 +223,7 @@ class Brick(Entity):
     def __init__(self, pos, display):
         super().__init__(pos, [BRICK_W, BRICK_H], SPRITES["brick"], display)
         self.init_pos = list(pos)
+    # all of this just makes sure Bricks never move
     def handle_collision(self, item, collision_data):
         self.vel = [0,0]
         self.acc = [0,0]
@@ -230,6 +247,8 @@ class SlidingBrick(Entity):
         self.init_y = pos[1]
         self.vel = [-1, 0]
     def handle_collision(self, item, collision_data):
+        # We could allow the default behavior to bounce us around but then the player can
+        # speed it up or slow it down with strategic bounces off the side
         if type(item) is SlidingBrickBouncer:
             self.vel[0] *= -1
             self.switched = True
@@ -286,6 +305,8 @@ class Enemy(Entity):
     def handle_collision(self, item, collision_data):
         if type(item) is not Brick and type(item) is not GrassBrick:
             return
+        # enemies walk back and forth across platforms by detecting when they start colliding with the corner instead of the top
+        # or falling off the edge
         if collision_data["direction"] == "top":
             if self.rect.x < item.rect.x or self.rect.right > item.rect.right:
                 self.vel[0] *= -1

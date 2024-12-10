@@ -11,6 +11,8 @@ YELLOW = pg.Color(255,255,0)
 GREEN = pg.Color(0,255,0)
 BLUE = pg.Color(0,0,255)
 
+# most of these are now obselete since we've introduce sprites
+# I'm keeping them in case I want them for something
 COLORS = {
     "background": pg.Color(20,90,90),
     "player": GREEN,
@@ -36,6 +38,7 @@ import sys
 from pathlib import Path
 dir = Path(sys.argv[0]).parent
 for name in SPRITES:
+    # we should use Path to concatenate the paths together but whatever
     path = f"{dir}/sprites/{SPRITES[name]}"
     SPRITES[name] = pg.image.load(path)
 
@@ -44,7 +47,11 @@ HEIGHT = 500
 
 FPS = 60
 
+# friction on the ground when not accelerating
 GROUND_FRICT = 0.3
+# friction on the ground when accelerating
+# making them different means you can speed up quickly but also stop quickly
+# which makes the game feel more responsive
 MOVING_FRICT = 0.07
 GRAVITY = 3
 GRAVITY_JUMPING = 2
@@ -54,7 +61,6 @@ BOX_W = 30
 
 ENEMY_W = 20
 ENEMY_H = 20
-ENEMY_RAND = 1
 
 GOLD_W = 20
 GOLD_H = 20
@@ -72,6 +78,8 @@ from levels import *
 BRICK_W = WIDTH/len(LEVELS[0][0])
 BRICK_H = HEIGHT/len(LEVELS[0])
 
+# we have to wait until now to import the components so that the necessary constants are declared
+# before the circular import
 from components import GrassBrick, Brick, Enemy, Box, Lava, Goal, SlidingBrick, SlidingBrickBouncer
 LAYOUT_KEY = {
     "player": "@",
