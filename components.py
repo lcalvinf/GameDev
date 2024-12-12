@@ -315,10 +315,29 @@ class Lava(Brick):
     def __init__(self, pos, display):
         super().__init__(pos, display)
         self.animation = SPRITES["lava"]
+        frames = len(self.animation)
+        size = self.animation[0].get_rect()
+        # basically each frame is a version of the image shifted over to the left a bit, with the part that "falls off" the left edge wrapped around to the right
+        # like, if the image is divided into five chunks:
+        # 1 2 3 4 5
+        # the frames are:
+        # 2 3 4 5 1
+        # 3 4 5 1 2
+        # etc
+        # this gives the effect of the lava flowing, albeit choppily
+        for i in range(1, frames):
+            new_sprite = pg.Surface(size.size, self.animation[i].get_flags())
+            blit_width = size.width-(i/frames)*size.width
+            new_sprite.blit(self.animation[0], (size.width-blit_width-1,0), pg.Rect(0,0,blit_width+2,size.height))
+            new_sprite.blit(self.animation[0], (0,0), pg.Rect(blit_width-1,0,size.width-blit_width+2,size.height))
+            self.animation[i] = new_sprite
     def handle_collision(self, item, collision_data):
         if type(item) is Player:
             item.remove = True
         return super().handle_collision(item, collision_data)
+    def update(self, world):
+        self.rotate_animation(300, world[0].dt)
+        super().update(world)
 
 class Goal(Entity):
     bounces = False

@@ -44,7 +44,7 @@ SPRITES = {
     "grass": "ground.png",
     "box": "crate.png",
     "enemy": "slime_normal.png",
-    "lava": "lava.png",
+    "lava": ["lava.png"]*20,
     "gold": "coin_gold.png",
 }
 import sys
