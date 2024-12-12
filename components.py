@@ -8,7 +8,7 @@ def mul_vectors(v1, m):
     return [v1[0]*m, v1[1]*m]
 
 class Entity:
-    def __init__(self, pos, size, sprite, display):
+    def __init__(self, pos, size, sprites, display):
         self.remove = False
         self.rect = pg.Rect(*pos, *size)
         # Mass currently doesn't really matter but the idea was that collisions would distribute energy according to the ratio of the masses
@@ -18,11 +18,13 @@ class Entity:
         self.on_ground = False
         self.collided = []
 
-        self.set_sprite(sprite)
+        self.set_animation(sprites)
         self.display = display
     
-    def set_sprite(self, sprite):
-        self.sprite = pg.transform.scale(sprite, self.rect.size)
+    def set_animation(self, sprites):
+        self.animation = [pg.transform.scale(sprite, self.rect.size) for sprite in sprites]
+        self.active_sprite = 0
+        self.last_rotation = 0
 
     # each class should override handle_collision with its particular collision logic
     def handle_collision(self, item, collision_data):
@@ -120,26 +122,48 @@ class Entity:
     
     # Since we merge adjacent bricks, we have to do fancy things to the sprite to make it look right
     def resize_sprite(self):
-        sprite_rect = self.sprite.get_rect()
-        if self.rect.width > sprite_rect.width:
-            new_sprite = pg.Surface(self.rect.size, self.sprite.get_flags())
-            x = 0
-            while x <= self.rect.width:
-                new_sprite.blit(self.sprite, (x, 0))
-                x += sprite_rect.width
-            self.sprite = new_sprite
-        elif self.rect.height > sprite_rect.height:
-            new_sprite = pg.Surface(self.rect.size, self.sprite.get_flags())
-            y = 0
-            while y <= self.rect.height:
-                new_sprite.blit(self.sprite, (0,y))
-                y += sprite_rect.height
-            self.sprite = new_sprite
+        new_animation = []
+        for sprite in self.animation:
+            sprite_rect = sprite.get_rect()
+            new_sprite = sprite
+            if self.rect.width > sprite_rect.width:
+                new_sprite = pg.Surface(self.rect.size, sprite.get_flags())
+                x = 0
+                while x <= self.rect.width:
+                    new_sprite.blit(sprite, (x, 0))
+                    x += sprite_rect.width
+            elif self.rect.height > sprite_rect.height:
+                new_sprite = pg.Surface(self.rect.size, sprite.get_flags())
+                y = 0
+                while y <= self.rect.height:
+                    new_sprite.blit(sprite, (0,y))
+                    y += sprite_rect.height
+            new_animation.append(new_sprite)
+        self.animation = new_animation
+
+    def reset_animation(self):
+        self.active_sprite = 0
+        self.last_rotation = 0
+    # go to the next frame of your animation, but only if rate milliseconds have passed since you last switched
+    # time_passed is the number of milliseconds elapsed this frame
+    # also reset to animation frame 1 so frame 0 can be used for the resting sprite (eg. player/front.png)
+    def rotate_animation(self, rate, time_passed):
+        self.last_rotation += time_passed
+        if self.last_rotation > rate:
+            self.last_rotation = 0
+            self.active_sprite += 1
+            if self.active_sprite >= len(self.animation):
+                self.active_sprite = 1
 
     def render(self):
-        if self.sprite.get_width() != self.rect.width or self.sprite.get_height() != self.rect.height:
+        sprite = self.animation[self.active_sprite]
+        if sprite.get_width() != self.rect.width or sprite.get_height() != self.rect.height:
             self.resize_sprite()
-        self.display.blit(self.sprite, self.rect)
+        sprite = self.animation[self.active_sprite]
+        # assume sprites are oriented right by default, so flip them if moving left
+        if self.vel[0] < 0:
+            sprite = pg.transform.flip(sprite, True, False)
+        self.display.blit(sprite, self.rect)
         if DEBUG:
             color = RED
             if self.on_ground:
@@ -158,6 +182,7 @@ class Player(Entity):
         self.ground = None
         self.last_on_ground = 0
         self.jumping = False
+        self.dt = 0
 
     
     def handle_collision(self, item, collision_data):
@@ -169,6 +194,9 @@ class Player(Entity):
                 self.remove = True
         elif collision_data["direction"] == "top":
             self.ground = item
+    
+    def update_time(self, clock):
+        self.dt = clock.get_time()
 
     def update(self, world):
         self.handle_keys()
@@ -187,6 +215,12 @@ class Player(Entity):
         if self.on_ground:
             self.last_on_ground = 0
             self.jumping = False
+            # compare to target vel so we're not constantly walking on moving platforms
+            if abs(self.vel[0]-target_vel) > 0.1:
+                # 20 milliseconds is only slightly more than one frame but it makes it look a little better I think
+                self.rotate_animation(20, self.dt)
+            else:
+                self.reset_animation()
         else:
             self.groud = None
             self.last_on_ground += 1
@@ -238,7 +272,7 @@ class GrassBrick(Brick):
     bounces = True
     def __init__(self, *args):
         super().__init__(*args)
-        self.set_sprite(SPRITES["grass"])
+        self.set_animation(SPRITES["grass"])
 
 class SlidingBrick(Entity):
     bounces = True
@@ -280,7 +314,7 @@ class Lava(Brick):
     bounces = True
     def __init__(self, pos, display):
         super().__init__(pos, display)
-        self.sprite = SPRITES["lava"]
+        self.animation = SPRITES["lava"]
     def handle_collision(self, item, collision_data):
         if type(item) is Player:
             item.remove = True

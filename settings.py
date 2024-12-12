@@ -25,7 +25,20 @@ COLORS = {
 }
 
 SPRITES = {
-    "player": "front.png",
+    "player": [
+        "player/front.png",
+        "player/walk0001.png",
+        "player/walk0002.png",
+        "player/walk0003.png",
+        "player/walk0004.png",
+        "player/walk0005.png",
+        "player/walk0006.png",
+        "player/walk0007.png",
+        "player/walk0008.png",
+        "player/walk0009.png",
+        "player/walk0010.png",
+        "player/walk0011.png",
+    ],
     "brick": "block.png",
     "platform": "plank.png",
     "grass": "ground.png",
@@ -38,9 +51,13 @@ import sys
 from pathlib import Path
 dir = Path(sys.argv[0]).parent
 for name in SPRITES:
-    # we should use Path to concatenate the paths together but whatever
-    path = f"{dir}/sprites/{SPRITES[name]}"
-    SPRITES[name] = pg.image.load(path)
+    # automatically turn single sprites into single-item lists
+    # that way every entity has a list of animation frames even if they never change appearance
+    if type(SPRITES[name]) is not list:
+        SPRITES[name] = [SPRITES[name]]
+    for i, path in enumerate(SPRITES[name]):
+        full_path = Path(dir, "sprites", path)
+        SPRITES[name][i] = pg.image.load(full_path)
 
 WIDTH = 800
 HEIGHT = 500

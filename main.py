@@ -78,6 +78,7 @@ while playing:
                 reset(player.level)
 
     # Update
+    player.update_time(clock)
     player.update(world)
     if player.remove:
         reset(player.level)
