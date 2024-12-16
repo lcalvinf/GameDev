@@ -182,6 +182,7 @@ class Player(Entity):
         self.ground = None
         self.last_on_ground = 0
         self.jumping = False
+        self.time = 0
         self.dt = 0
 
     
@@ -197,6 +198,7 @@ class Player(Entity):
     
     def update_time(self, clock):
         self.dt = clock.get_time()
+        self.time += self.dt 
 
     def update(self, world):
         self.handle_keys()
@@ -315,29 +317,34 @@ class Lava(Brick):
     def __init__(self, pos, display):
         super().__init__(pos, display)
         self.animation = SPRITES["lava"]
-        frames = len(self.animation)
-        size = self.animation[0].get_rect()
-        # basically each frame is a version of the image shifted over to the left a bit, with the part that "falls off" the left edge wrapped around to the right
-        # like, if the image is divided into five chunks:
-        # 1 2 3 4 5
-        # the frames are:
-        # 2 3 4 5 1
-        # 3 4 5 1 2
-        # etc
-        # this gives the effect of the lava flowing, albeit choppily
-        for i in range(1, frames):
-            new_sprite = pg.Surface(size.size, self.animation[i].get_flags())
-            blit_width = size.width-(i/frames)*size.width
-            new_sprite.blit(self.animation[0], (size.width-blit_width-1,0), pg.Rect(0,0,blit_width+2,size.height))
-            new_sprite.blit(self.animation[0], (0,0), pg.Rect(blit_width-1,0,size.width-blit_width+2,size.height))
-            self.animation[i] = new_sprite
+        self.animation.append(self.animation[0].copy())
+        self.original_sprite = self.animation[0].copy()
+        self.time = 0
     def handle_collision(self, item, collision_data):
         if type(item) is Player:
             item.remove = True
         return super().handle_collision(item, collision_data)
     def update(self, world):
-        self.rotate_animation(300, world[0].dt)
+        self.time = world[0].time
         super().update(world)
+    def render(self):
+        # essentially we're shifting the sprite over a bit each frame, and wrapping the part that falls off the edge around to the other side
+        # we use the original sprite and then let the Entity render method handle stretching it out to the correct size
+        # otherwise the sprite isn't perfectly looping so it doesn't work
+        sprite = self.original_sprite
+        size = sprite.get_rect()
+        shifted_sprite = pg.Surface(size.size, sprite.get_flags())
+        # FREQ is the number of milliseconds it should take for one full rotation to pass
+        # so if the wave peaks somewhere at 0 milliseconds, it will peak there again after FREQ milliseconds
+        FREQ = 5000
+        shift_percent = (self.time%FREQ)/FREQ
+        shift_width = math.floor(shift_percent*size.width)
+        shifted_sprite.blit(sprite, (0,0), pg.Rect(size.width-shift_width,0,shift_width,size.height))
+        shifted_sprite.blit(sprite, (shift_width,0), pg.Rect(0,0,size.width-shift_width,size.height))
+        self.animation[1] = shifted_sprite
+        self.active_sprite = 1
+        super().render()
+        self.active_sprite = 0
 
 class Goal(Entity):
     bounces = False
