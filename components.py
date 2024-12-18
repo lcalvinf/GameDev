@@ -164,7 +164,14 @@ class Entity:
         # assume sprites are oriented right by default, so flip them if moving left
         if self.vel[0] < 0 and self.flip:
             sprite = pg.transform.flip(sprite, True, False)
-        self.display.blit(sprite, self.rect)
+        # stretch vertically to make it bouncy
+        scale = 1
+        if abs(self.vel[1]) > 5:
+            scale = 1+math.log((abs(self.vel[1])-5))/4
+            sprite = pg.transform.scale_by(sprite, (1, scale))
+        # offset so if the sprite is stretched the bottom is still in the right place
+        # otherwise you clip through the ground sometimes
+        self.display.blit(sprite, (self.rect.left, self.rect.top-(sprite.get_height()-self.rect.height)))
         if DEBUG:
             color = RED
             if self.on_ground:
