@@ -8,7 +8,7 @@ def mul_vectors(v1, m):
     return [v1[0]*m, v1[1]*m]
 
 class Entity:
-    def __init__(self, pos, size, sprites, display):
+    def __init__(self, pos, size, sprites, display, flip=True):
         self.remove = False
         self.rect = pg.Rect(*pos, *size)
         # Mass currently doesn't really matter but the idea was that collisions would distribute energy according to the ratio of the masses
@@ -18,6 +18,7 @@ class Entity:
         self.on_ground = False
         self.collided = []
 
+        self.flip = flip
         self.set_animation(sprites)
         self.display = display
     
@@ -161,7 +162,7 @@ class Entity:
             self.resize_sprite()
         sprite = self.animation[self.active_sprite]
         # assume sprites are oriented right by default, so flip them if moving left
-        if self.vel[0] < 0:
+        if self.vel[0] < 0 and self.flip:
             sprite = pg.transform.flip(sprite, True, False)
         self.display.blit(sprite, self.rect)
         if DEBUG:
@@ -248,7 +249,7 @@ class Player(Entity):
 class Box(Entity):
     bounces = True
     def __init__(self, pos, display):
-        super().__init__(pos, [BOX_W, BOX_W], SPRITES["box"], display)
+        super().__init__(pos, [BOX_W, BOX_W], SPRITES["box"], display, False)
     def update(self, world):
         self.acc[0] -= self.vel[0]*GROUND_FRICT*self.mass
         super().update(world)
