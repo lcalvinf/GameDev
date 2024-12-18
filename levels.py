@@ -2,7 +2,7 @@
 LEVELS = [
     [
         "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH",
-        "H             S                H",
+        "H             U                H",
         "H                              H",
         "H                              H",
         "H                              H",
@@ -13,7 +13,7 @@ LEVELS = [
         "H                              H",
         "H                              H",
         "H                              H",
-        "H                              H",
+        "H            S                 H",
         "H                              H",
         "H                              H",
         "H                    @         H",
@@ -24,7 +24,7 @@ LEVELS = [
     ],
     [
         "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH",
-        "H             S                H",
+        "H             U                H",
         "H                              H",
         "H                              H",
         "H                              H",
@@ -38,7 +38,7 @@ LEVELS = [
         "H                              H",
         "H                              H",
         "H                              H",
-        "H                    @         H",
+        "H            S       @         H",
         "H                              H",
         "H                              H",
         "H      O                       H",
@@ -46,7 +46,7 @@ LEVELS = [
     ],
     [
         "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH",
-        "H             S                H",
+        "H             U                H",
         "H                              H",
         "H                              H",
         "H                              H",
@@ -56,7 +56,7 @@ LEVELS = [
         "H                              H",
         "H                              H",
         "H                              H",
-        "H                              H",
+        "H    S                         H",
         "H            O                 H",
         "H        ######      @         H",
         "H                              H",
@@ -68,8 +68,8 @@ LEVELS = [
     ],
     [
         "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH",
-        "H             S                H",
-        "H                              H",
+        "H             U                H",
+        "H  S                           H",
         "H      @                       H",
         "H                              H",
         "H###############               H",
@@ -90,7 +90,7 @@ LEVELS = [
     ],
     [
         "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH",
-        "H             S                H",
+        "H             U                H",
         "H                              H",
         "H                              H",
         "H                              H",
@@ -112,7 +112,7 @@ LEVELS = [
     ],
     [
         "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH",
-        "H             S                H",
+        "H             U                H",
         "H                              H",
         "H                              H",
         "H                              H",
@@ -134,7 +134,7 @@ LEVELS = [
     ],
     [
         "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH",
-        "H             S                H",
+        "H             U                H",
         "H                              H",
         "H HHHHHHH  H    H  HHHHHH      H",
         "H    H     H    H  H           H",
@@ -155,3 +155,16 @@ LEVELS = [
         "H##############################H",
     ],
 ]
+
+LEVEL_SIGNS = [
+    ["Move with the arrow keys"],
+    ["Jump with space"],
+    ["Jump on the slime"],
+    ["Good luck!"],
+    [],
+    [],
+    []
+]
+# Obviously not a good way to do this
+# but I don't care
+assert(len(LEVELS) == len(LEVEL_SIGNS))

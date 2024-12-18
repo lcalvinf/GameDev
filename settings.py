@@ -21,7 +21,8 @@ COLORS = {
     "enemy": RED,
     "lava": ORANGE,
     "gold": YELLOW,
-    "score": BLACK
+    "score": BLACK,
+    "sign": BLACK
 }
 
 SPRITES = {
@@ -100,7 +101,8 @@ BRICK_H = HEIGHT/len(LEVELS[0])
 from components import GrassBrick, Brick, Enemy, Box, Lava, Goal, SlidingBrick, SlidingBrickBouncer
 LAYOUT_KEY = {
     "player": "@",
-    "score": "S",
+    "score": "U",
+    "sign": "S",
     "#": {
         "type": GrassBrick,
         "merge": True
