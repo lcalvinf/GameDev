@@ -8,8 +8,10 @@ def mul_vectors(v1, m):
     return [v1[0]*m, v1[1]*m]
 
 class Entity:
-    def __init__(self, pos, size, sprites, display, flip=True):
+    def __init__(self, init_pos, init_size, sprites, display, flip=True):
         self.remove = False
+        size = (init_size[0]*WIDTH/INITIAL_WIDTH, init_size[1]*HEIGHT/INITIAL_HEIGHT)
+        pos = (init_pos[0]*WIDTH/INITIAL_WIDTH, init_pos[1]*HEIGHT/INITIAL_HEIGHT)
         self.rect = pg.Rect(*pos, *size)
         # Mass currently doesn't really matter but the idea was that collisions would distribute energy according to the ratio of the masses
         self.mass = math.log(size[0]*size[1]/100)+1

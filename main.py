@@ -12,12 +12,10 @@ font = pg.font.SysFont("sans-serif", 50)
 smallfont = pg.font.SysFont("sans-serif", 30)
 
 def reset(level):
-    global score_loc, player, world, signs, BRICK_W, BRICK_H
+    global score_loc, player, world, signs 
     LAYOUT = LEVELS[level-1]
     player = Player([WIDTH/2, HEIGHT/2], screen)
     player.level = level
-    BRICK_W = WIDTH/len(LAYOUT[0])
-    BRICK_H = HEIGHT/len(LAYOUT)
     world = []
     signs = []
     columns = [
@@ -79,6 +77,9 @@ while playing:
             if event.key == pg.K_q:
                 playing = False
             elif event.key == pg.K_r:
+                reset(player.level)
+            elif event.key == pg.K_n:
+                player.level += 1
                 reset(player.level)
 
     # Update
